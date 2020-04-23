@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from ..items import ScrapingItem
-
+from datetime import datetime
 
 class FetcherSpider(scrapy.Spider):
     name = 'fetcher'
@@ -21,11 +21,13 @@ class FetcherSpider(scrapy.Spider):
         reviews = response.css('.collapsable')
         
         for review in reviews:
-            user = review.css(".display-name-link a::text").extract()
+            user = review.css(".display-name-link a::text").get()
             rating = review.css(".rating-other-user-rating span::text").extract()
-            date = review.css(".review-date::text").extract()
+            date = review.css(".review-date::text").get()
             review = review.css(".show-more__control::text").extract()
-            
+
+            date = str(datetime.strptime(date, '%d %B %Y').date()) # parse the date and format it in a 'YYYY-MM-DD'-like string
+
             item['user'] = user
             item['rating'] = rating
             item['date'] = date
