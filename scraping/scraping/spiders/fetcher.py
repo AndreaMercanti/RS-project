@@ -22,16 +22,19 @@ class FetcherSpider(scrapy.Spider):
         
         for review in reviews:
             user = review.css(".display-name-link a::text").get()
-            rating = review.css(".rating-other-user-rating span::text").extract()
+            rating_components = review.css(".rating-other-user-rating span::text").extract()
             date = review.css(".review-date::text").get()
-            review = review.css(".show-more__control::text").extract()
+            review_components = review.css(".show-more__control::text").extract()
 
-            date = str(datetime.strptime(date, '%d %B %Y').date()) # parse the date and format it in a 'YYYY-MM-DD'-like string
+            # PARSING AND BETTER FORMATTING THE DIFFERENT ELEMS
+            date = str(datetime.strptime(date, '%d %B %Y').date()) # formatting in a 'YYYY-MM-DD'-like string
+            review_str = ''.join(review_components[0:-2]) # compatting all review components into one string, but the last two
+            rating = ''.join(rating_components) # compatting all rating components into one string
 
             item['user'] = user
             item['rating'] = rating
             item['date'] = date
-            item['review'] = review
+            item['review'] = review_str
             
             yield item
         
