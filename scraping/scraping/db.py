@@ -2,8 +2,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, String, Integer, Date, Text, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import sessionmaker
 
-engine = create_engine('sqlite:///prova.db', echo=True)
+# engine = None
 Base = declarative_base()
 
 class Film(Base):
@@ -38,21 +39,60 @@ class Review(Base):
     def __repr__(self):
         return "<Review(id={}, film={}, user={}, date={}, rating={}, review={})>".format(self.id, self.film_id, self.user, self.date, self.rating, self.review)
 
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)
 
-# class DBManager:
-#     __instance = None
+class DBManager:
+    """ Singleton class which is used to get only one database manager instance all over the project. """
+    __instance = None
+    engine = None
 
-#     def __init__(self):
-#         if DBManager.__instance is None:
-#             DBManager.__instance = self
-#             engine = create_engine('sqlite:///prova.db', echo=True)
-#             Base.metadata.create_all(engine)
+    def __init__(self):
+        if DBManager.__instance == None:
+            DBManager.__instance = self
+            self.engine = create_engine('sqlite:///prova.db', echo=True)
+            Base.metadata.create_all(self.engine)
+        else:
+            pass
     
-#     @staticmethod
-#     def getInstance():
-#         """ Static access method. """
-#         if DBManager.__instance is None:
-#             DBManager()
-#         return DBManager.__instance
-        
+    @staticmethod
+    def getInstance():
+        """ Static access method for always getting the reference to the only manager istance."""
+        if DBManager.__instance == None:
+            DBManager()
+        return DBManager.__instance
+
+    def addFilm(self, id, title):
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+
+        film = Film(id=id, title=title)
+        session.add(film)
+
+        session.commit()
+        session.close()
+
+    def addReview(self, user, rating, date, review, film):
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+
+        review_obj = Review(user=user, rating=rating, date=date, review=review, film=film)
+        session.add(review_obj)
+
+        session.commit()
+        session.close()
+
+    def getReviewsOf(self, filmID):
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+
+        film = session.query(Film).filter_by(id=filmID)
+        session.close()
+        return film.reviews
+
+    def getFilmBy(self, ID):
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+
+        film = session.query(Film).filter_by(id=ID)
+        session.close()
+        return film
