@@ -9,16 +9,24 @@ from sqlalchemy.orm import sessionmaker
 from .db import DBManager, Film
 
 class ScrapingPipeline(object):
-    def process_item(self, item, spider):
-        db_mgr = DBManager.getInstance()
-        film = Film(id=item['filmID'], title=item['filmTitle'])
+    film = None
 
-        try:
-            db_mgr.addFilm(item['filmID'], item['filmTitle'])
-        except IntegrityError:
-            print('The film already exists')
+    def process_item(self, item, spider):
+        dbMgr = DBManager.getInstance()
+        
+        if self.film is None or self.film.id != item['filmID']:
+            self.film = dbMgr.getFilmByID(item['filmID'])
+            # self.film = Film(id=item['filmID'], title=item['filmTitle'])
+            # dbMgr.addFilm(item['filmID'], item['filmTitle'])
+        
+        repr(self.film)
+
+        # try:
+        #     dbMgr.addFilm(item['filmID'], item['filmTitle'])
+        # except IntegrityError:
+        #     print('The film already exists')
         
         try:
-            db_mgr.addReview(item['user'], item['rating'], item['date'], item['review'], film)
+            dbMgr.addReview(item['user'], item['rating'], item['date'], item['review'], self.film)
         except IntegrityError:
             print('The review already exists')
