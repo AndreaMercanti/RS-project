@@ -4,6 +4,7 @@ from sqlalchemy import Column, String, Integer, Date, Text, ForeignKey
 from sqlalchemy.orm import relationship, sessionmaker
 from typing import List
 from datetime import date
+import json
 
 Base = declarative_base()
 
@@ -50,10 +51,10 @@ class DBManager:
             DBManager.__instance = self
             self.engine = create_engine('sqlite:///prova.db', echo=True)
             Base.metadata.create_all(self.engine)
-            # with open('movie_dataset.json', 'r') as file:
-            #     for line in file.readlines():
-            #         movie = json.loads(line)
-            #         self.addFilm(movie['imdbID'], movie['Title'])
+            with open('movie_dataset.json', 'r') as file:
+                for line in file.readlines():
+                    movie = json.loads(line)
+                    self.addFilm(movie['imdbID'], movie['Title'])
         else:
             pass
     
